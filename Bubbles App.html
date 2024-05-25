@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bubbles App</title>
+<div id="header">Bubbles App</div>
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        text-align: center;
+        overflow: hidden;
+    }
+    canvas {
+        display: block;
+        margin: auto;
+        border: 3px solid gray;
+    }
+    #header {
+        margin-top: 20px;
+        font-weight: bold;
+        font-size: 34px;
+        font-family: cursive;
+    }
+
+    button#resetButton {
+        font-family: cursive;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        border: 2px solid black;
+        background-color: #f0f0f0;
+        box-shadow: 3px 3px black;
+    }
+
+</style>
+</head>
+<body>
+    
+<canvas id="myCanvas" width="800" height="550"></canvas>
+<button id="resetButton">Reset</button>
+
+
+<script>
+    const canvas = document.getElementById('myCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const circles = [
+        { x: 100, y: 100, radius: 50, color: 'Yellow' },
+        { x: 100, y: 220, radius: 50, color: 'Blue' },
+        { x: 100, y: 340, radius: 50, color: 'Red' },
+        { x: 100, y: 460, radius: 50, color: 'Green' },
+    ];
+
+    const originalColors = circles.map(circle => circle.color);
+
+    const arrows = [];
+
+    for (let i = 0; i < circles.length; i++) {
+        arrows.push({ x: 700, y: circles[i].y, direction: -1, fontSize: '16px', color: 'black' });
+    }
+
+    function drawCircle(x, y, radius, color) {
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.closePath();
+    }
+
+    function drawArrow(x, y, direction) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + direction * 50, y);
+        ctx.lineTo(x + direction * 40, y - 10);
+        ctx.moveTo(x + direction * 50, y);
+        ctx.lineTo(x + direction * 40, y + 10);
+        ctx.strokeStyle = 'black';
+        ctx.stroke();
+        ctx.closePath();
+
+    }
+
+
+
+    function moveArrowTowardsCircle(circleIndex) {
+        const arrow = arrows[circleIndex];
+        const circle = circles[circleIndex];
+        const angle = Math.atan2(circle.y - arrow.y, circle.x - arrow.x);
+        const speed = 4;
+        const distance = Math.sqrt((circle.x - arrow.x) ** 2 + (circle.y - arrow.y) ** 2);
+
+        if (distance > circle.radius) {
+            arrow.x += Math.cos(angle) * speed;
+            arrow.y += Math.sin(angle) * speed;
+        }
+    }
+
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < circles.length; i++) {
+            drawCircle(circles[i].x, circles[i].y, circles[i].radius, circles[i].color);
+            drawArrow(arrows[i].x, arrows[i].y, arrows[i].direction);
+        }
+    }
+
+    canvas.addEventListener('click', function(event) {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+        for (let i = 0; i < circles.length; i++) {
+            if (!circles[i].clicked && Math.sqrt((mouseX - circles[i].x) ** 2 + (mouseY - circles[i].y) ** 2) < circles[i].radius) {
+                circles[i].clicked = true;
+                
+                const arrowInterval = setInterval(function() {
+                    moveArrowTowardsCircle(i);
+                    draw();
+                    
+                    if (Math.sqrt((arrows[i].x - circles[i].x) ** 2 + (arrows[i].y - circles[i].y) ** 2) <= circles[i].radius*2) {
+                        clearInterval(arrowInterval);
+                        circles[i].color = '#' + Math.floor(Math.random() * 16777215).toString(16);
+                        draw();
+                    }
+                }, 10);
+                break;
+            }
+        }
+    });
+
+
+
+
+    document.getElementById('resetButton').addEventListener('click', function() {
+        for (let i = 0; i < circles.length; i++) {
+            circles[i].color = originalColors[i];
+            circles[i].clicked = false;
+            arrows[i].direction = -1;
+            arrows[i].x = 700;
+            arrows[i].y = circles[i].y;
+        }
+        draw();
+    });
+
+
+    draw();
+    
+</script>
+</body>
+</html>
